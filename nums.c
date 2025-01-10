@@ -40,26 +40,39 @@ void	move_letter(char str[], int start, int to_move)
 
 int main()
 {
-	char str[] = "mamaq";
+	char str[] = "mamaqpicacho";
 	int str_len = ft_strlen(str);
 
-	int to_move[] = {1, 7, -10, 3, 5, 10}; // 
+	int to_move[] = {1, 7, -10, 1, 7, -10,1, 7, -10,}; // 
 	int size = sizeof(to_move) / sizeof(to_move[0]);
 
 	// мешалка
 	int i = 0;
+	int index = 0;
 	while (i < size && str[i] != '\0')
 	{
+		if (index == 3)
+		{
+			index = 0;
+		}
 		move_letter(str, i, to_move[i]);
 		i++;
+		index++;
 	}
 	printf("Shuffled: %s\n", str);
 
     // Восстановление
     i = str_len - 1;
-    while (i >= 0 && str[i] != '\0') {
+	index = size - 1;
+    while (i >= 0 && str[i] != '\0')
+	{
+		if (index == -1)
+		{
+			index = size -1;
+		}
         move_letter(str, i, to_move[i]); // Используем обратный сдвиг
         i--;
+		index--;
     }
     printf("Restored: %s\n", str);
 }
