@@ -12,6 +12,7 @@ typedef struct t_data
 {
 	int bit_index;
 	int current_value;
+	int index;
 } s_data;
 
 #endif

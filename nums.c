@@ -31,7 +31,6 @@ void	move_letter(char str[], int start, int to_move)
     diff = (start + to_move) % str_len;
     if (diff < 0)
         diff += str_len;
-	// printf("diff: %d\n", diff);
     if (diff != start)
     {
         swap(&str[start], &str[diff]);
@@ -63,59 +62,44 @@ void	get_big_arr(int **arr, int *size, int *ascii_arr, int size_ascii, char str[
 		cur_index++;
 		i++;
 	}
-	for (int i = 0; i < *size; i++)
-	{
-		printf("%d\n", (*arr)[i]);
-	}
 }
 
 int main()
 {
-	char str[] = "mamaqpicacho";
+	char str[] = "mamaqpicacho. hello world, how are you?";
 	int str_len = ft_strlen(str);
 
-	int to_move[] = {5, 1, 10,}; // 
-	int size = sizeof(to_move) / sizeof(to_move[0]);
+	int *to_move = (int *)malloc(sizeof(int) * 3);
+	to_move[0] = 5;
+	to_move[1] = 1;
+	to_move[2] = 10;
+	int size = 3;
 
 	int *big_arr;
 	int size_big = 0;
 	if (size < str_len)
 	{	
 		get_big_arr(&big_arr, &size_big, to_move, size, str);
+		free(to_move);
+		to_move = big_arr;
+		size = size_big;
 	}
 	// мешалка
-	// int i = 0;
-	// int index = 0;
-	// while (i < size && str[i] != '\0')
-	// {
-	// 	if (index == size)
-	// 	{
-	// 		index = 0;
-	// 	}
-	// 	printf("i: %d; index: %d\n", i, index);
-	// 	// printf("to_move: %d\n", to_move[i]);
-	// 	move_letter(str, i, to_move[i]);
-	// 	i++;
-	// 	index++;
-	// }
-	// printf("Shuffled: %s\n", str);
+	int i = 0;
+	while (i < size && str[i] != '\0')
+	{
+		move_letter(str, i, to_move[i]);
+		i++;
+	}
+	printf("Shuffled: %s\n", str);
 
-    // // Восстановление
-    // i = str_len - 1;
-	// index = 2;
-    // while (i >= 0 && str[i] != '\0')
-	// {
-	// 	if (index == -1)
-	// 	{
-	// 		index = 2;
-	// 	}
-	// 	printf("i: %d; index: %d\n", i, index);
-	// 	printf("to_move: %d\n", to_move[i]);
-
-    //     move_letter(str, i, to_move[i]); // Используем обратный сдвиг
-    //     i--;
-	// 	index--;
-    // }
-    // printf("Restored: %s\n", str);
+    // Восстановление
+    i = str_len - 1;
+    while (i >= 0 && str[i] != '\0')
+	{
+        move_letter(str, i, to_move[i]);
+        i--;
+    }
+    printf("Restored: %s\n", str);
 }
 

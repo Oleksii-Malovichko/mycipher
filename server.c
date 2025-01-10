@@ -22,46 +22,114 @@ void	swap(char *c1, char *c2)
 
 void	move_letter(char str[], int start, int to_move)
 {
-	int str_len;
-	int diff;
+	int str_len = ft_strlen(str);
+    int diff;
 
-	str_len = ft_strlen(str) - 1;
-	if (start < 0 || start >= str_len) { // Проверяем границы индекса
-        return;
-    }
 	if (to_move < 0)
+	{
 		to_move = -to_move;
-	diff = (start + to_move) % str_len;
-	if (diff < 0) {
+	}
+    diff = (start + to_move) % str_len;
+    if (diff < 0)
         diff += str_len;
-    }
-	if (diff != start) { // Меняем местами только если индексы различны
+    if (diff != start)
+    {
         swap(&str[start], &str[diff]);
     }
-	// printf("diff: %d\n", diff);
-	// swap(&str[start], &str[diff]);
-	// printf("start %d; diff %d\n", start, diff);
 }
 
-char *cipher_string(char *line, int str_len)
+void	get_big_arr(volatile int **arr, int *size, volatile int *ascii_arr, int size_ascii, char str[])
 {
-	int size = sizeof(arr) / sizeof(arr[0]);
-	// мешалка
+	int str_len = ft_strlen(str);
 	int i = 0;
-	while (i < size && line[i] != '\0')
+	int cur_index = 0;
+	*size = 0;
+
+	while (*size < str_len)
 	{
-		move_letter(line, i, arr[i]);
+		(*size)++;
+	}
+	printf("new size: %d\n", *size);
+	*arr = (int *)malloc(sizeof(int *) * (*size));
+	if (!*arr)
+		exit(1);
+	while (i < *size)
+	{
+		if (cur_index == size_ascii)
+		{
+			cur_index = 0;
+		}
+		(*arr)[i] = ascii_arr[cur_index];
+		cur_index++;
 		i++;
 	}
-	printf("Shuffled: %s\n", line);
+}
 
-    // Восстановление
-    i = size - 1;
-    while (i >= 0) {
-        move_letter(line, i, -arr[i]); // Используем обратный сдвиг
-        i--;
+void send_bit(int pid, int bit)
+{
+    if (bit == 0)
+    {
+        if (kill(pid, SIGUSR1) == -1)
+            exit(EXIT_FAILURE);
     }
-    printf("Restored: %s\n", line);
+    else
+    {
+        if (kill(pid, SIGUSR2) == -1)
+            exit(EXIT_FAILURE);
+    }
+	// wait_for_ack();
+	usleep(300);
+}
+
+void send_str(int pid, char ch)
+{
+    int bit_index;
+    int bit;
+
+    bit_index = 0;
+    while (bit_index < 8)
+    {
+        bit = (ch >> bit_index) & 1;
+		send_bit(pid, bit);
+        bit_index++;
+    }
+}
+
+void	cipher_string(char *str, siginfo_t *info)
+{
+	int str_len = ft_strlen(str);
+	int size = 128;
+
+	volatile int *big_arr;
+	int size_big = 0;
+	big_arr = arr;
+	if (size < str_len)
+	{	
+		get_big_arr(&big_arr, &size_big, arr, size, str);
+		size = size_big;
+	}
+	int i = 0;
+	while (i < size && str[i] != '\0')
+	{
+		move_letter(str, i, big_arr[i]);
+		i++;
+	}
+	printf("Shuffled: %s\n", str);
+	printf("Pid to send: %d\n", info->si_pid);
+	i = 0;
+	while (str[i] != '\0')
+	{
+		send_str(info->si_pid, str[i]);
+		i++;
+	}
+	send_str(info->si_pid, '\0');
+	// i = str_len - 1;
+    // while (i >= 0 && str[i] != '\0')
+	// {
+    //     move_letter(str, i, big_arr[i]);
+    //     i--;
+    // }
+    // printf("Restored: %s\n", str);
 }
 
 void	handle_signal_bytes(int sig, siginfo_t *info, void *context) // получение ключа
@@ -89,11 +157,11 @@ void	handle_signal_bytes(int sig, siginfo_t *info, void *context) // получ�
 		data->current_value = 0;
 		data->index++;		
 	}
-	if (kill(client_pid, SIGUSR2) == -1)
-		exit(EXIT_FAILURE);
+	// if (kill(client_pid, SIGUSR2) == -1)
+	// 	exit(EXIT_FAILURE);
 	if (data->index == 128)
 	{
-		// printf("write smth\n");
+		printf("write smth\n");
 		for (int i = 0; i < 128; i++)
 		{
 			printf("%d, ",arr[i]);
@@ -102,9 +170,10 @@ void	handle_signal_bytes(int sig, siginfo_t *info, void *context) // получ�
 		char *line = NULL;
 		size_t len = 0;
 		ssize_t read;
-		while ((read = getline(&line, &len, stdin)) != -1)
+		while ((read = getline(&line, &len, stdin)) != -1) // получение строки
 		{
-			cipher_string(line, ft_strlen(line));
+			printf("line: %s", line);
+			cipher_string(line, info);
 			// printf("\n");
 		}
 		free(line);
